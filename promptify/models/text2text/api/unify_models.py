@@ -77,30 +77,11 @@ class UnifyModel(Model):
             self._client = UnifyClient(api_key = self.api_key, endpoint=self.endpoint)
         else:
             self._client = UnifyClient(api_key=self.api_key, model=self.model, provider=self.provider)
+
         
     def _initialize_parser(self):
         self.parser = Parser()
-    
-
-    
-    # def model_output_raw(self, prompt: str):
-    #     data = {}
-    #     raw_response = self._client.generate(prompt, max_tokens=self.max_tokens).strip(" \n")
-    #     data['text'] = str(raw_response)
-    #     return data
-    
-    
-    # def model_output(self, prompt, json_depth_limit) -> Dict:
-    #     data = self.model_output_raw(prompt)
-    #     data["parsed"] = self.parser.fit(data["text"], json_depth_limit)
-    #     return data
-
-    # def run(self, prompt: str):
-    #     parameters = self.get_parameters()  # Get the parameters as a dictionary
-    #     parameters["prompt"] = prompt  # Add the prompt to the parameters
-    #     response = self.model_output(prompt, self.json_depth_limit)  # Pass the prompt to the model_output method
-    #     return response
-
+        
 
     def model_output_raw(self, prompt: str):
         data = {}
@@ -124,13 +105,3 @@ class UnifyModel(Model):
         for response in self.model_output(prompt, self.json_depth_limit):
             yield response
             
-    
-    
-# # Define the API key for the OpenAI model
-# api_key  = "1a2Yi8+xTGIsQ8bwxgSUhOvztnIhLPgJALzg5Ys98lI="
-
-
-# # Create an instance of the OpenAI model, Currently supporting Openai's all model, In future adding more generative models from Hugginface and other platforms
-# model = UnifyModel(api_key = api_key, model="llama-3-8b-chat", provider="fireworks-ai")
-
-# print(model.run("what is the capital of france?"))

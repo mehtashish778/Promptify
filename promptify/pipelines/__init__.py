@@ -1,4 +1,5 @@
 from pathlib import Path
+import types
 from tqdm import tqdm
 from typing import Any, Dict, Optional
 from promptify.prompter.conversation_logger import *
@@ -33,6 +34,8 @@ class Pipeline:
         }
         self.logger = ConversationLogger(self.conversation_path, self.model_dict)
 
+
+
     def fit(self, text_input: str, **kwargs) -> Any:
         """
         Processes an input text through the pipeline: generates a prompt, gets a response from the model,
@@ -42,8 +45,7 @@ class Pipeline:
         outputs_list = []
         for prompter in tqdm(self.prompters):
             try:
-                template, variables_dict = prompter.generate(text_input, self.model.model, **kwargs)
-
+                template, variables_dict = prompter.generate(text_input, self.model, **kwargs)
             except ValueError as e:
                 print(f"Error in generating prompt: {e}")
                 return None
@@ -55,26 +57,28 @@ class Pipeline:
             if output is None:
                 return None
 
+            # Handle generator output
+            final_output = list(output)[-1] if isinstance(output, types.GeneratorType) else output
+
             if "jinja" in prompter.template:
                 prompt_name = prompter.template
             else:
                 prompt_name = "Unknown"
-
             if self.structured_output:
                 message = create_message(
                     template,
                     variables_dict,
-                    output["text"],
-                    output["parsed"]["data"]["completion"],
+                    final_output["text"],
+                    final_output["parsed"]["data"]["completion"] if final_output["parsed"] else None,
                     prompt_name,
                 )
             else:
                 message = create_message(
-                    template, variables_dict, output, None, prompt_name
+                    template, variables_dict, final_output, None, prompt_name
                 )
 
             self.logger.add_message(message)
-            outputs_list.append(output)
+            outputs_list.append(final_output)
 
         return outputs_list
 
@@ -87,18 +91,87 @@ class Pipeline:
         if output is None:
             try:
                 response = self.model.execute_with_retry(prompt=template)
+                output = list(response)[-1] if isinstance(response, types.GeneratorType) else response
             except Exception as e:
                 print(f"Error in model execution: {e}")
                 return None
-
-            if self.structured_output:
-                output = self.model.model_output(
-                    response, json_depth_limit=self.json_depth_limit
-                )
-            else:
-                output = response
 
             if self.cache_prompt:
                 self.prompt_cache.add(template, output)
 
         return output
+    
+
+
+
+#older codes    
+
+ # def fit(self, text_input: str, **kwargs) -> Any:
+    #     """
+    #     Processes an input text through the pipeline: generates a prompt, gets a response from the model,
+    #     caches the response, logs the conversation, and returns the output.
+    #     """
+
+    #     outputs_list = []
+    #     for prompter in tqdm(self.prompters):
+    #         try:
+    #             template, variables_dict = prompter.generate(text_input, self.model.model, **kwargs)
+
+    #         except ValueError as e:
+    #             print(f"Error in generating prompt: {e}")
+    #             return None
+
+    #         if kwargs.get("verbose", False):
+    #             print(template)
+
+    #         output = self._get_output_from_cache_or_model(template)
+    #         if output is None:
+    #             return None
+
+    #         if "jinja" in prompter.template:
+    #             prompt_name = prompter.template
+    #         else:
+    #             prompt_name = "Unknown"
+
+    #         if self.structured_output:
+    #             message = create_message(
+    #                 template,
+    #                 variables_dict,
+    #                 output["text"],
+    #                 output["parsed"]["data"]["completion"],
+    #                 prompt_name,
+    #             )
+    #         else:
+    #             message = create_message(
+    #                 template, variables_dict, output, None, prompt_name
+    #             )
+
+    #         self.logger.add_message(message)
+    #         outputs_list.append(output)
+
+    #     return outputs_list
+
+    # def _get_output_from_cache_or_model(self, template):
+    #     output = None
+
+    #     if self.cache_prompt:
+    #         output = self.prompt_cache.get(template)
+
+    #     if output is None:
+    #         try:
+    #             response = self.model.execute_with_retry(prompt=template)
+    #         except Exception as e:
+    #             print(f"Error in model execution: {e}")
+    #             return None
+
+    #         if self.structured_output:
+    #             output = self.model.model_output(
+    #                 response, json_depth_limit=self.json_depth_limit
+    #             )
+    #         else:
+    #             output = response
+
+    #         if self.cache_prompt:
+    #             self.prompt_cache.add(template, output)
+
+    #     return output

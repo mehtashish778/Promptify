@@ -3,6 +3,7 @@ from glob import glob
 from typing import List
 from promptify.utils.file_utils import *
 from jinja2 import Template, Environment, FileSystemLoader, meta
+from promptify.models.text2text.api.unify_models import UnifyModel
 
 
 class TemplateLoader:
@@ -89,7 +90,26 @@ class TemplateLoader:
         }
 
 
+#older code
+
+    # def search_model(self, data, model_name):
+
+    #     all_models = []
+    #     for sample in data:
+    #         if model_name in sample['models']:
+    #             return sample
+    #         else:
+    #             all_models.extend(sample['models'])
+    #     raise ValueError(
+    #                 f"Model not found. Please choose the model from : {all_models}"
+    #             )
+
+
     def search_model(self, data, model_name):
+        if isinstance(model_name, UnifyModel):
+            model_name = model_name.model
+        elif hasattr(model_name, 'model'):
+            model_name = model_name.model
 
         all_models = []
         for sample in data:
@@ -97,9 +117,14 @@ class TemplateLoader:
                 return sample
             else:
                 all_models.extend(sample['models'])
-        raise ValueError(
-                    f"Model not found. Please choose the model from : {all_models}"
-                )
+        
+        # If the model is not found, return the first sample as a fallback
+        if data:
+            # print(f"Warning: Model '{model_name}' not found. Using the first available model.")
+            return data[0]
+        else:
+            raise ValueError(f"No models found in the metadata. Available models: {all_models}")
+
 
     def _get_metadata(self, template_name, template_path, model_name):
 
@@ -113,6 +138,26 @@ class TemplateLoader:
         metadata["file_path"] = os.path.join(template_path, template_name)
     
         return {"metadata": metadata}
+    
+
+#new one
+
+    # def _get_metadata(self, template_name, template_path, model_name):
+    #     template_name, _ = template_name.split(".jinja")
+    #     metadata_files = glob(
+    #         os.path.join(template_path, template_name, "metadata.json")
+    #     )
+
+    #     if not metadata_files:
+    #         print(f"Warning: No metadata file found for template '{template_name}'. Using default metadata.")
+    #         return {"metadata": {"file_name": f"{template_name}.jinja", "file_path": os.path.join(template_path, template_name)}}
+
+    #     metadata = read_json(metadata_files[0])
+    #     metadata = self.search_model(metadata, model_name)
+    #     metadata["file_path"] = os.path.join(template_path, template_name)
+
+    #     return {"metadata": metadata}
+
 
     def _verify_template_path(self, templates_path: str):
         """

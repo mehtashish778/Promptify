@@ -5,6 +5,7 @@ from .prompter.prompt_cache import PromptCache
 from .prompter.template_loader import TemplateLoader
 from .prompter.conversation_logger import ConversationLogger
 from .models.text2text.api.openai_models import OpenAI
+from .models.text2text.api.unify_models import UnifyModel
 from .models.text2text.api.anthropic import AnthropicModel
 from .models.text2text.api.cohere import CohereModel
 from .models.text2text.api.azure_openai import Azure

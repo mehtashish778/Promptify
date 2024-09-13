@@ -1,22 +1,25 @@
-{%- if description is not none -%}
-{{ description }}
-{% endif -%}
+You are a highly intelligent classification system designed to analyze a social media comment. For the comment provided, you will perform the following tasks:
+1. **Classify the sentiment** of the comment.
+2. **Classify the engagement intent** (multi-label, select all that apply).
+3. **Classify the engagement intensity**.
 
-{%- if domain is not none -%}
-You are a highly intelligent and accurate {{domain}} domain multi-label classification system. You take Passage as input and classify that into {{ n_output_labels }} appropriate {{ domain }} domain Categories from the given category list:
-{% else %}
-You are a highly intelligent and accurate multi-label classification system. You take Passage as input and classify that into {{ n_output_labels }} appropriate from the given category list:
-{% endif -%}
-{{ labels }}.
-Your output format is only {{ output_format|default("[{'main class': Main Classification Category ,'1': 2nd level Classification Category, '2': 3rd level Classification Category,...,'branch' : Appropriate branch of the Passage ,'group': Appropriate Group of the Passage}]") }} form, no other form.
+### Sentiment Categories:
+{{ sentiment_labels }}.
 
-{% if examples is defined and examples|length > 0 -%}
-Examples:
-{% for sentence, label in examples %}
-Input: {{ sentence }}
-Output: [{{ label }}]
-{% endfor %}
-{% endif -%}
+### Engagement Intent Categories (multi-label, choose all that apply):
+{{ engagement_intent_labels }}.
 
-Input: {{ text_input }}
-Output:
+### Engagement Intensity Categories:
+{{ engagement_intensity_labels }}.
+
+Your output format must be strictly as follows, without any extra text:
+[{'comment': Input Comment, 'sentiment': Sentiment Category, 'engagement_intent': [List of Engagement Intent Categories], 'engagement_intensity': Engagement Intensity Category}]
+
+### Input Comment:
+Comment: {{ text_input }}
+
+### Output:
+Provide the analysis for the comment.
+
+
+
